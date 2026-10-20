@@ -1,0 +1,6 @@
+dist
+coverage
+node_modules
+package-lock.json
+# Gerado por `npm run gen:types`
+src/api/flowo.gen.ts

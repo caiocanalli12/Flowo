@@ -1,0 +1,72 @@
+name: flowo
+
+# Ambiente de desenvolvimento: db + backend + frontend com hot reload.
+# No Windows/macOS o Docker Desktop não repassa eventos de arquivo dos bind
+# mounts, por isso backend e frontend observam mudanças por polling.
+
+x-db-credentials: &db-credentials
+  POSTGRES_USER: ${POSTGRES_USER:-flowo}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flowo}
+  POSTGRES_DB: ${POSTGRES_DB:-flowo}
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      <<: *db-credentials
+    # Portas presas ao 127.0.0.1: credenciais padrão e API sem login não ficam na rede local.
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Cria o banco de testes (flowo_test) na primeira inicialização do volume.
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Via TCP: o servidor temporário da inicialização só escuta no socket local,
+      # então o check só passa quando o Postgres definitivo está no ar.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-flowo}:${POSTGRES_PASSWORD:-flowo}@db:5432/${POSTGRES_DB:-flowo}
+      TEST_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-flowo}:${POSTGRES_PASSWORD:-flowo}@db:5432/flowo_test
+      CORS_ORIGINS: '["http://localhost:${FRONTEND_HOST_PORT:-5173}"]'
+      WATCHFILES_FORCE_POLLING: "true"
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+      # /shared fica em ../shared relativo a /app, igual ao layout do repositório.
+      - ./shared:/shared
+    depends_on:
+      db:
+        condition: service_healthy
+    # `exec` faz o uvicorn substituir o sh e receber o SIGTERM do `docker compose stop`.
+    command: >-
+      sh -c "uv run alembic upgrade head &&
+      exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir app"
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+      VITE_USE_POLLING: "true"
+    ports:
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      # node_modules vem da imagem (Linux), nunca do host (Windows).
+      - /app/node_modules
+      - ./shared:/shared:ro
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+
+volumes:
+  db-data:

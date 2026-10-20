@@ -1,0 +1,335 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FlowoContract",
+  "description": "Contrato da API do Flowo. GERADO a partir dos modelos Pydantic do backend; não edite à mão (rode `make types`).",
+  "type": "object",
+  "properties": {
+    "Workflow": {
+      "$ref": "#/$defs/Workflow"
+    },
+    "WorkflowSummary": {
+      "$ref": "#/$defs/WorkflowSummary"
+    },
+    "WorkflowCreate": {
+      "$ref": "#/$defs/WorkflowCreate"
+    },
+    "WorkflowUpdate": {
+      "$ref": "#/$defs/WorkflowUpdate"
+    },
+    "Node": {
+      "$ref": "#/$defs/Node"
+    },
+    "Edge": {
+      "$ref": "#/$defs/Edge"
+    },
+    "EdgeEndpoint": {
+      "$ref": "#/$defs/EdgeEndpoint"
+    },
+    "Position": {
+      "$ref": "#/$defs/Position"
+    },
+    "HealthStatus": {
+      "$ref": "#/$defs/HealthStatus"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Edge": {
+      "additionalProperties": false,
+      "description": "Conexão dirigida de uma porta de saída para uma porta de entrada.",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/EdgeEndpoint"
+        },
+        "target": {
+          "$ref": "#/$defs/EdgeEndpoint"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "title": "Edge",
+      "type": "object"
+    },
+    "EdgeEndpoint": {
+      "additionalProperties": false,
+      "description": "Uma ponta de aresta: o nó e a porta dele.",
+      "properties": {
+        "node_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "port": {
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "port"
+      ],
+      "title": "EdgeEndpoint",
+      "type": "object"
+    },
+    "HealthStatus": {
+      "additionalProperties": false,
+      "description": "Resposta de `GET /api/health`.\n\n`status` é `degraded` quando a API responde mas o banco não.",
+      "properties": {
+        "status": {
+          "enum": [
+            "ok",
+            "degraded"
+          ],
+          "type": "string"
+        },
+        "database": {
+          "enum": [
+            "ok",
+            "unavailable"
+          ],
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "database",
+        "version"
+      ],
+      "title": "HealthStatus",
+      "type": "object"
+    },
+    "Node": {
+      "additionalProperties": false,
+      "description": "Um passo do fluxo.\n\nTodos os campos são obrigatórios (`label` pode ser vazio, `config` pode ser `{}`):\nassim o mesmo tipo serve para entrada e resposta, sem campos opcionais no TS.",
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/NodeType"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "label": {
+          "maxLength": 120,
+          "type": "string"
+        },
+        "config": {
+          "additionalProperties": true,
+          "description": "Configuração específica do tipo de nó (será tipada por tipo no futuro).",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "position",
+        "label",
+        "config"
+      ],
+      "title": "Node",
+      "type": "object"
+    },
+    "NodeType": {
+      "description": "Tipos de nó suportados por um workflow.",
+      "enum": [
+        "manual_trigger",
+        "webhook",
+        "schedule",
+        "http_request",
+        "python_script",
+        "js_script",
+        "email",
+        "condition",
+        "llm"
+      ],
+      "title": "NodeType",
+      "type": "string"
+    },
+    "Position": {
+      "additionalProperties": false,
+      "description": "Posição do nó na grade isométrica, em células inteiras.",
+      "properties": {
+        "x": {
+          "maximum": 10000,
+          "minimum": -10000,
+          "type": "integer"
+        },
+        "y": {
+          "maximum": 10000,
+          "minimum": -10000,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Position",
+      "type": "object"
+    },
+    "Workflow": {
+      "additionalProperties": false,
+      "description": "Workflow persistido, como a API o devolve.",
+      "properties": {
+        "id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "nodes",
+        "edges",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "Workflow",
+      "type": "object"
+    },
+    "WorkflowCreate": {
+      "additionalProperties": false,
+      "description": "Corpo de `POST /api/workflows`. O grafo pode começar vazio.",
+      "properties": {
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "maxItems": 500,
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "maxItems": 2000,
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "WorkflowCreate",
+      "type": "object"
+    },
+    "WorkflowSummary": {
+      "additionalProperties": false,
+      "description": "Item da listagem: metadados sem o grafo completo.",
+      "properties": {
+        "id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "node_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "edge_count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "node_count",
+        "edge_count",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "WorkflowSummary",
+      "type": "object"
+    },
+    "WorkflowUpdate": {
+      "additionalProperties": false,
+      "description": "Corpo de `PUT /api/workflows/{id}`: substitui nome e grafo por completo.",
+      "properties": {
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/Node"
+          },
+          "maxItems": 500,
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "maxItems": 2000,
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "nodes",
+        "edges"
+      ],
+      "title": "WorkflowUpdate",
+      "type": "object"
+    }
+  }
+}

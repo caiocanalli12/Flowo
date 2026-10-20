@@ -1,0 +1,46 @@
+/*
+ * Design tokens do Flowo como CSS variables.
+ * Espelho de tokens.ts: altere os dois juntos (há um teste de paridade).
+ */
+:root {
+  /* Cinzas: toda a cena */
+  --flowo-gray-background: #1c1d21;
+  --flowo-gray-surface: #26282d;
+  --flowo-gray-grid: #34363c;
+  --flowo-gray-border: #44474f;
+  --flowo-gray-text: #e6e7ea;
+  --flowo-gray-text-muted: #9a9da6;
+
+  /* Luzes: a única cor da cena, uma por tipo de nó */
+  --flowo-light-trigger: #fb923c;
+  --flowo-light-http: #6366f1;
+  --flowo-light-python: #38bdf8;
+  --flowo-light-javascript: #facc15;
+  --flowo-light-email: #f472b6;
+  --flowo-light-condition: #e5e7eb;
+  --flowo-light-llm: #a855f7;
+
+  /* Estados */
+  --flowo-status-success: #22c55e;
+  --flowo-status-failure: #ef4444;
+
+  /* Tipografia */
+  --flowo-font-sans:
+    Inter, 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --flowo-font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, 'SFMono-Regular', monospace;
+
+  /* Raios */
+  --flowo-radius-sm: 4px;
+  --flowo-radius-md: 8px;
+  --flowo-radius-lg: 12px;
+
+  /* Espaçamento */
+  --flowo-space-1: 4px;
+  --flowo-space-2: 8px;
+  --flowo-space-3: 12px;
+  --flowo-space-4: 16px;
+  --flowo-space-6: 24px;
+  --flowo-space-8: 32px;
+
+  color-scheme: dark;
+}

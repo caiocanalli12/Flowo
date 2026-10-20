@@ -1,0 +1,59 @@
+.indicator {
+  --light-color: var(--flowo-gray-text-muted);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--flowo-space-2);
+  padding: var(--flowo-space-1) var(--flowo-space-3);
+  border: 1px solid var(--flowo-gray-border);
+  border-radius: 999px;
+  background: var(--flowo-gray-background);
+  color: var(--flowo-gray-text-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.indicator[data-state='connected'] {
+  --light-color: var(--flowo-status-success);
+}
+
+.indicator[data-state='degraded'],
+.indicator[data-state='offline'] {
+  --light-color: var(--flowo-status-failure);
+}
+
+/* A "luz": a única parte colorida do selo. */
+.light {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--light-color);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--light-color) 18%, transparent),
+    0 0 10px color-mix(in srgb, var(--light-color) 70%, transparent);
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.indicator[data-state='checking'] .light {
+  box-shadow: none;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light {
+    transition: none;
+  }
+
+  .indicator[data-state='checking'] .light {
+    animation: none;
+  }
+}
